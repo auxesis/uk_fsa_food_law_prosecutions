@@ -83,7 +83,7 @@ def build_prosecution(row)
     end
     details.merge!({key => value})
   end
-  details['id'] = generate_id(details)
+  details['link'] = "#{url}##{details['id']}"
   return details
 end
 
@@ -121,13 +121,16 @@ end
 
 def existing_record_ids
   return @cached if @cached
-  @cached = ScraperWiki.select('id from data').map {|r| r['id']}
+  @cached = ScraperWiki.select('link from data').map {|r| r['link']}
 rescue SqliteMagic::NoSuchTable
   []
 end
 
+def url
+  "https://www.food.gov.uk/sites/default/files/prosecution-outcomes.xls"
+end
+
 def fetch_prosecutions
-  url = "https://www.food.gov.uk/sites/default/files/prosecution-outcomes.xls"
   xls = open(url)
 
   sheet = Spreadsheet.open(xls).worksheet(0)
@@ -142,12 +145,12 @@ def main
   prosecutions.map! { |p| build_prosecution(p) }
 
   puts "### Found #{prosecutions.size} notices"
-  new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['id'])}
+  new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['link'])}
   puts "### There are #{new_prosecutions.size} new prosecutions"
   new_prosecutions.map! {|p| geocode(p) }
 
   # Serialise
-  ScraperWiki.save_sqlite(['id'], new_prosecutions)
+  ScraperWiki.save_sqlite(['link'], new_prosecutions)
 
   puts "Done"
 end
