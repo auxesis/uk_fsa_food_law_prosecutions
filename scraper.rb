@@ -84,6 +84,11 @@ def geocode(prosecution)
   else
     puts "Geocoding #{address}"
     a = Geokit::Geocoders::GoogleGeocoder.geocode(address)
+
+    if !a.lat && !a.lng
+      a = Geokit::Geocoders::GoogleGeocoder.geocode(prosecution['postcode'])
+    end
+
     location = {
       'lat' => a.lat,
       'lng' => a.lng,
