@@ -60,7 +60,7 @@ def build_prosecution(row)
       value = scrub_date(value)
     else
       # Remove all leading and trailing whitespace
-      value.strip
+      value.strip if value.is_a? String
     end
     details.merge!({key => value})
   end
