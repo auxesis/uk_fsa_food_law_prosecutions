@@ -48,14 +48,27 @@ def normalise_date(value)
     return value
   else
     puts "[debug] Unhandled date: #{value.inspect}"
+    raise
   end
 end
 
-def normalise_trading_name(value)
+def normalise_costs_awarded(value)
+  case
+  when value.class == String
+    normalise_string(value)
+  when value.class == Float
+    value
+  else
+    puts "[debug] Unhandled costs_awarded value: #{value.inspect}"
+    raise
+  end
+end
+
+def normalise_string(value)
   case value
   when nil
     nil
-  when /N\\A/
+  when /^\s*N[\\\/]A\s*$/
     nil
   else
     value.strip
@@ -76,7 +89,9 @@ def build_prosecution(row)
     when 'date_of_conviction'
       value = normalise_date(value)
     when 'trading_name'
-      value = normalise_trading_name(value)
+      value = normalise_string(value)
+    when 'costs_awarded'
+      value = normalise_costs_awarded(value)
     else
       # Remove all leading and trailing whitespace, remove unicode spaces
       value.scrub! if value.is_a? String
