@@ -26,13 +26,19 @@ Geokit::Geocoders::GoogleGeocoder.api_key = ENV['MORPH_GOOGLE_API_KEY'] if ENV['
   17 => 'costs_awarded',
   18 => 'prosecution_authority'
 }
+
 class String
   def to_md5
     Digest::MD5.new.hexdigest(self)
   end
+
+  def scrub!
+    self.gsub!(/[[:space:]]/, ' ') # convert all utf whitespace to simple space
+    self.strip!
+  end
 end
 
-def scrub_date(value)
+def normalise_date(value)
   case
   when value.class == DateTime
     return value.to_date
@@ -42,6 +48,17 @@ def scrub_date(value)
     return value
   else
     puts "[debug] Unhandled date: #{value.inspect}"
+  end
+end
+
+def normalise_trading_name(value)
+  case value
+  when nil
+    nil
+  when /N\\A/
+    nil
+  else
+    value.strip
   end
 end
 
@@ -57,10 +74,12 @@ def build_prosecution(row)
     when nil
       next
     when 'date_of_conviction'
-      value = scrub_date(value)
+      value = normalise_date(value)
+    when 'trading_name'
+      value = normalise_trading_name(value)
     else
-      # Remove all leading and trailing whitespace
-      value.strip if value.is_a? String
+      # Remove all leading and trailing whitespace, remove unicode spaces
+      value.scrub! if value.is_a? String
     end
     details.merge!({key => value})
   end
