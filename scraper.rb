@@ -83,7 +83,7 @@ def build_prosecution(row)
     end
     details.merge!({key => value})
   end
-  details['link'] = "#{url}##{details['id']}"
+  details['link'] = "#{url}##{generate_id(details)}"
   return details
 end
 
